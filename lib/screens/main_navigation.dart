@@ -13,10 +13,17 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
+  final GlobalKey<dynamic> _historyKey = GlobalKey();
 
-  final List<Widget> _screens = [
-    const TripCalculatorScreen(),
-    const HistoryScreen(),
+  void _refreshHistory() {
+    if (_historyKey.currentState != null) {
+      (_historyKey.currentState as dynamic).loadTrips();
+    }
+  }
+
+  List<Widget> get _screens => [
+    TripCalculatorScreen(onTripSaved: _refreshHistory),
+    HistoryScreen(key: _historyKey),
     const SettingsScreen(),
   ];
 

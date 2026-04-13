@@ -2,54 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../core/theme/app_colors.dart';
+import '../../models/trip.dart';
 
-class TripSummaryScreen extends StatelessWidget {
-  final String fromLocation;
-  final String toLocation;
-  final double distance;
-  final String vehicle;
-  final double avgKmLitre;
-  final double pkrLitre;
-  final double tollParking;
-  final double foodSnacks;
-  final int peopleCount;
-  final double totalCost;
-  final double perPerson;
-  final double fuelCost;
+class SavedTripDetailScreen extends StatelessWidget {
+  final Trip trip;
 
-  const TripSummaryScreen({
-    super.key,
-    required this.fromLocation,
-    required this.toLocation,
-    required this.distance,
-    required this.vehicle,
-    required this.avgKmLitre,
-    required this.pkrLitre,
-    required this.tollParking,
-    required this.foodSnacks,
-    required this.peopleCount,
-    required this.totalCost,
-    required this.perPerson,
-    required this.fuelCost,
-  });
+  const SavedTripDetailScreen({super.key, required this.trip});
 
   String _generateShareText() {
     return '''
 🚗 Trip Cost Summary
 
-📍 Route: $fromLocation → $toLocation
-📏 Distance: ${distance.toStringAsFixed(1)} km
-🚙 Vehicle: $vehicle
+📍 Route: ${trip.fromLocation} → ${trip.toLocation}
+📏 Distance: ${trip.distance.toStringAsFixed(1)} km
+🚙 Vehicle: ${trip.vehicle}
 
-💰 Total Cost: PKR ${totalCost.toStringAsFixed(0)}
-👥 People: $peopleCount
-💵 Each Pays: PKR ${perPerson.toStringAsFixed(0)}
+💰 Total Cost: Rs ${trip.totalCost.toStringAsFixed(0)}
+👥 People: ${trip.peopleCount}
+💵 Each Pays: Rs ${trip.perPerson.toStringAsFixed(0)}
 
 📊 Cost Breakdown:
-⛽ Fuel: PKR ${fuelCost.toStringAsFixed(0)}
-🛣️ Tolls & Parking: PKR ${tollParking.toStringAsFixed(0)}
-🍔 Food & Snacks: PKR ${foodSnacks.toStringAsFixed(0)}
+⛽ Fuel: Rs ${trip.fuelCost.toStringAsFixed(0)}
+🛣️ Tolls & Parking: Rs ${trip.tollParking.toStringAsFixed(0)}
+🍔 Food & Snacks: Rs ${trip.foodSnacks.toStringAsFixed(0)}
 
 Calculated via Trip Cost Splitter App
 ''';
@@ -99,15 +74,11 @@ Calculated via Trip Cost Splitter App
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final extraCosts = tollParking + foodSnacks;
 
     return Scaffold(
       backgroundColor: isDark ? null : const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: Text(
-          'Share Summary',
-          style: TextStyle(color: colorScheme.primary),
-        ),
+        title: const Text('Trip Details'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
@@ -126,8 +97,6 @@ Calculated via Trip Cost Splitter App
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Each Pays',
@@ -137,8 +106,8 @@ Calculated via Trip Cost Splitter App
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'PKR ${perPerson.toStringAsFixed(0)}',
-                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                    'Rs ${trip.perPerson.toStringAsFixed(0)}',
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
@@ -149,14 +118,19 @@ Calculated via Trip Cost Splitter App
                     children: [
                       _SummaryStat(
                         label: 'Total',
-                        value: 'PKR ${totalCost.toStringAsFixed(0)}',
+                        value: 'Rs ${trip.totalCost.toStringAsFixed(0)}',
+                        icon: Icons.account_balance_wallet_rounded,
                       ),
                       Container(
                         height: 40,
                         width: 1,
                         color: Colors.white.withValues(alpha: 0.3),
                       ),
-                      _SummaryStat(label: 'People', value: '$peopleCount'),
+                      _SummaryStat(
+                        label: 'People',
+                        value: '${trip.peopleCount}',
+                        icon: Icons.people_rounded,
+                      ),
                     ],
                   ),
                 ],
@@ -166,7 +140,7 @@ Calculated via Trip Cost Splitter App
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.surfaceDark : Colors.white,
+                color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -204,7 +178,9 @@ Calculated via Trip Cost Splitter App
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          fromLocation.isEmpty ? 'Not specified' : fromLocation,
+                          trip.fromLocation.isEmpty
+                              ? 'Not specified'
+                              : trip.fromLocation,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
@@ -225,7 +201,9 @@ Calculated via Trip Cost Splitter App
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          toLocation.isEmpty ? 'Not specified' : toLocation,
+                          trip.toLocation.isEmpty
+                              ? 'Not specified'
+                              : trip.toLocation,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
@@ -234,16 +212,16 @@ Calculated via Trip Cost Splitter App
                 ],
               ),
             ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
-            const SizedBox(height: 20),
-
+            const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.surfaceDark : const Color(0xF3F4F5),
+                color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -260,29 +238,31 @@ Calculated via Trip Cost Splitter App
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      Icon(Icons.receipt_long_rounded),
+                      Icon(
+                        Icons.receipt_long_rounded,
+                        color: colorScheme.primary,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
                   _CostRowItem(
                     label: 'Fuel Cost',
-                    value: 'PKR ${fuelCost.toStringAsFixed(0)}',
+                    value: 'Rs ${trip.fuelCost.toStringAsFixed(0)}',
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   _CostRowItem(
                     label: 'Toll & Parking',
-                    value: 'PKR ${tollParking.toStringAsFixed(0)}',
+                    value: 'Rs ${trip.tollParking.toStringAsFixed(0)}',
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   _CostRowItem(
                     label: 'Food & Snacks',
-                    value: 'PKR ${foodSnacks.toStringAsFixed(0)}',
+                    value: 'Rs ${trip.foodSnacks.toStringAsFixed(0)}',
                   ),
-                  const SizedBox(height: 8),
                   const Divider(height: 20),
                   _CostRowItem(
                     label: 'Total Amount',
-                    value: 'PKR ${totalCost.toStringAsFixed(0)}',
+                    value: 'Rs ${trip.totalCost.toStringAsFixed(0)}',
                     isBold: true,
                   ),
                 ],
@@ -291,6 +271,18 @@ Calculated via Trip Cost Splitter App
             const SizedBox(height: 32),
             Column(
               children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _copyToClipboard(context),
+                    icon: const Icon(Icons.copy_rounded),
+                    label: const Text('Copy summary'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -303,21 +295,8 @@ Calculated via Trip Cost Splitter App
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _copyToClipboard(context),
-                    icon: const Icon(Icons.copy_rounded),
-                    label: const Text('Copy Summary'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                    ),
-                  ),
-                ),
               ],
             ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -328,13 +307,20 @@ Calculated via Trip Cost Splitter App
 class _SummaryStat extends StatelessWidget {
   final String label;
   final String value;
+  final IconData icon;
 
-  const _SummaryStat({required this.label, required this.value});
+  const _SummaryStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        Icon(icon, color: Colors.white, size: 20),
+        const SizedBox(height: 4),
         Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -388,43 +374,6 @@ class _CostRowItem extends StatelessWidget {
   }
 }
 
-class _DashedLinePainter extends CustomPainter {
-  final Color color;
-
-  _DashedLinePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: 0.5)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    const dashWidth = 5.0;
-    const dashSpace = 3.0;
-    double startX = 22;
-
-    while (startX < size.width - 22) {
-      canvas.drawLine(
-        Offset(startX, size.height / 2),
-        Offset(startX + dashWidth, size.height / 2),
-        paint,
-      );
-      startX += dashWidth + dashSpace;
-    }
-
-    canvas.drawCircle(
-      Offset(22, size.height / 2),
-      4,
-      paint..style = PaintingStyle.fill,
-    );
-    canvas.drawCircle(Offset(size.width - 22, size.height / 2), 4, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
 class _RouteMapPainter extends CustomPainter {
   final Color color;
 
@@ -468,20 +417,6 @@ class _RouteMapPainter extends CustomPainter {
       10,
       dotPaint,
     );
-
-    final carPaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final carPath = Path();
-    carPath.addOval(
-      Rect.fromCenter(
-        center: Offset(size.width * 0.5, size.height * 0.35),
-        width: 24,
-        height: 16,
-      ),
-    );
-    canvas.drawPath(carPath, carPaint);
   }
 
   @override

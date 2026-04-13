@@ -1,0 +1,69 @@
+Trip Cost Calculation Details
+=============================
+
+Total Amount Calculation
+------------------------
+
+1. Fuel Cost:
+   Formula: (Distance / Avg KM per Litre) x Fuel Price per Litre
+   
+   Example:
+   - Distance: 350 km
+   - Avg KM/L: 14 km/L (depends on vehicle selected)
+   - Fuel Price: 275 PKR/L
+   
+   Fuel Cost = (350 / 14) x 275 = 6,875 PKR
+
+2. Extra Costs (Toll & Parking + Food & Snacks):
+   - Toll & Parking: User enters manually (e.g., 500 PKR)
+   - Food & Snacks: User enters manually (e.g., 1,000 PKR)
+   
+   Extra Costs = 500 + 1,000 = 1,500 PKR
+
+3. Total Amount:
+   Total Amount = Fuel Cost + Extra Costs
+   
+   Example:
+   Total Amount = 6,875 + 1,500 = 8,375 PKR
+
+4. Per Person Cost:
+   Per Person = Total Amount / Number of People
+   
+   Example (with 4 people):
+   Per Person = 8,375 / 4 = 2,094 PKR (rounded)
+
+
+Vehicle Presets
+-----------
+The app comes with pre-defined vehicles that have their own fuel efficiency:
+
+- Alto: 18 km/L
+- Passo: 16 km/L
+- Civic: 14 km/L
+- City: 13 km/L
+- Corolla: 13 km/L
+- Swift: 16 km/L
+- WagonR: 16 km/L
+- Mehran: 18 km/L
+- Cultus: 16 km/L
+- Other: 14 km/L
+
+Default fuel price: 275 PKR/L for all vehicles
+
+
+User Inputs Required
+-------------------
+1. Route Details:
+   - From location
+   - To location
+   - Distance (in km)
+
+2. Vehicle Selection:
+   - Select a vehicle from presets
+
+3. Extra Costs:
+   - Toll & Parking (optional)
+   - Food & Snacks (optional)
+
+4. Number of People:
+   - Minimum 1 person

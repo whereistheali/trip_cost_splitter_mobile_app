@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color primaryLight = Color(0xFF4CAF50);
-  static const Color primaryDark = Color(0xFF66BB6A);
+  static const Color primaryLight = Color(0xFF10B981);
+  static const Color primaryDark = Color(0xFF10B981);
 
   static const Color secondaryLight = Color(0xFF2196F3);
   static const Color secondaryDark = Color(0xFF42A5F5);
@@ -25,8 +25,8 @@ class AppColors {
   static const Color textSecondaryLight = Color(0xFF757575);
   static const Color textSecondaryDark = Color(0xFFB0B0B0);
 
-  static const Color splashGradientStart = Color(0xFF4CAF50);
-  static const Color splashGradientEnd = Color(0xFF2196F3);
+  static const Color splashGradientStart = Color(0xFF10B981);
+  static const Color splashGradientEnd = Color(0xFF10B981);
 
   static const Color errorColor = Color(0xFFE53935);
   static const Color successColor = Color(0xFF43A047);

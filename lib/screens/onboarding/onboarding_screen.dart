@@ -73,25 +73,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   children: [
                     Row(
                       children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                colorScheme.primary,
-                                colorScheme.secondary,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(
-                            Icons.route_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
+                        
                         Text(
                           'TripSplitter',
                           style: Theme.of(context).textTheme.titleMedium

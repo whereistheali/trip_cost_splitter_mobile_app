@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/trip.dart';
+import '../../services/trip_storage.dart';
 import 'trip_summary_screen.dart';
 
 class TripCalculatorScreen extends StatefulWidget {
-  const TripCalculatorScreen({super.key});
+  final VoidCallback? onTripSaved;
+
+  const TripCalculatorScreen({super.key, this.onTripSaved});
 
   @override
   State<TripCalculatorScreen> createState() => _TripCalculatorScreenState();
@@ -28,61 +32,61 @@ class _TripCalculatorScreenState extends State<TripCalculatorScreen> {
     {
       'name': 'Alto',
       'km': 18.0,
-      'price': 275.0,
+      'price': 380.0,
       'icon': Icons.directions_car_rounded,
     },
     {
       'name': 'Passo',
       'km': 16.0,
-      'price': 275.0,
+      'price': 380.0,
       'icon': Icons.directions_car_rounded,
     },
     {
       'name': 'Civic',
       'km': 14.0,
-      'price': 275.0,
+      'price': 380.0,
       'icon': Icons.directions_car_rounded,
     },
     {
       'name': 'City',
       'km': 13.0,
-      'price': 275.0,
+      'price': 380.0,
       'icon': Icons.directions_car_rounded,
     },
     {
       'name': 'Corolla',
       'km': 13.0,
-      'price': 275.0,
+      'price': 380.0,
       'icon': Icons.directions_car_rounded,
     },
     {
       'name': 'Swift',
       'km': 16.0,
-      'price': 275.0,
+      'price': 380.0,
       'icon': Icons.directions_car_rounded,
     },
     {
       'name': 'WagonR',
       'km': 16.0,
-      'price': 275.0,
+      'price': 380.0,
       'icon': Icons.directions_car_rounded,
     },
     {
       'name': 'Mehran',
       'km': 18.0,
-      'price': 275.0,
+      'price': 380.0,
       'icon': Icons.directions_car_rounded,
     },
     {
       'name': 'Cultus',
       'km': 16.0,
-      'price': 275.0,
+      'price': 380.0,
       'icon': Icons.directions_car_rounded,
     },
     {
       'name': 'Other',
       'km': 14.0,
-      'price': 275.0,
+      'price': 380.0,
       'icon': Icons.directions_car_rounded,
     },
   ];
@@ -111,23 +115,17 @@ class _TripCalculatorScreenState extends State<TripCalculatorScreen> {
     }
   }
 
-  void _navigateToSummary() {
+  Future<void> _navigateToSummary() async {
     double? distance;
 
     if (_distanceController.text.isNotEmpty) {
       distance = double.tryParse(_distanceController.text);
-    } else if (_showDistance) {
-      distance = 350;
     }
 
     if (distance == null || distance <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _showDistance
-                ? 'Tap "Use this distance" or enter distance manually'
-                : 'Please enter distance',
-          ),
+        const SnackBar(
+          content: Text('Please enter the distance'),
           backgroundColor: Colors.red,
         ),
       );
@@ -139,7 +137,7 @@ class _TripCalculatorScreenState extends State<TripCalculatorScreen> {
     final tollParking = double.tryParse(_tollParkingController.text) ?? 0;
     final foodSnacks = double.tryParse(_foodSnacksController.text) ?? 0;
 
-    if (avgKmLitre <= 0 || pkrLitre <= 0) {
+    if (_selectedVehicle.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a vehicle'),
@@ -149,10 +147,30 @@ class _TripCalculatorScreenState extends State<TripCalculatorScreen> {
       return;
     }
 
-    final fuelCost = (distance / avgKmLitre) * pkrLitre;
+    final fuelCost = (distance! / avgKmLitre) * pkrLitre;
     final extraCosts = tollParking + foodSnacks;
     final totalCost = fuelCost + extraCosts;
     final perPerson = _peopleCount > 0 ? totalCost / _peopleCount : totalCost;
+
+    final trip = Trip(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      fromLocation: _fromController.text,
+      toLocation: _toController.text,
+      distance: distance!,
+      vehicle: _selectedVehicle,
+      avgKmLitre: avgKmLitre,
+      pkrLitre: pkrLitre,
+      tollParking: tollParking,
+      foodSnacks: foodSnacks,
+      peopleCount: _peopleCount,
+      totalCost: totalCost,
+      perPerson: perPerson,
+      fuelCost: fuelCost,
+      createdAt: DateTime.now(),
+    );
+
+    await TripStorage.saveTrip(trip);
+    widget.onTripSaved?.call();
 
     Navigator.push(
       context,
@@ -231,7 +249,7 @@ class _TripCalculatorScreenState extends State<TripCalculatorScreen> {
                     'ROUTE DETAILS',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      fontSize: 8,
+                      fontSize: 10,
                       letterSpacing: 1.0,
                       fontWeight: FontWeight.bold,
                     ),
@@ -312,7 +330,56 @@ class _TripCalculatorScreenState extends State<TripCalculatorScreen> {
               ),
             ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
             const SizedBox(height: 20),
-            if (_showDistance) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.surfaceDark : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.straighten_rounded, color: colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _distanceController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d*'),
+                        ),
+                      ],
+                      decoration: const InputDecoration(
+                        hintText: 'Enter distance (km)',
+                        border: UnderlineInputBorder(),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Color(0xFF3B82F6),
+                            width: 2,
+                          ),
+                        ),
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(duration: 400.ms),
+            const SizedBox(height: 20),
+            if (_distanceController.text.isNotEmpty &&
+                double.tryParse(_distanceController.text) != null &&
+                double.parse(_distanceController.text) > 0) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
@@ -342,9 +409,9 @@ class _TripCalculatorScreenState extends State<TripCalculatorScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      '350 km',
-                      style: TextStyle(
+                    Text(
+                      '${_distanceController.text} km',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
@@ -352,7 +419,7 @@ class _TripCalculatorScreenState extends State<TripCalculatorScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'estimated via M-2 motorway',
+                      'Estimated distance entered',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 12,

@@ -124,55 +124,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ).animate().fadeIn(delay: 400.ms),
               const SizedBox(height: 32),
-              Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                colorScheme.primary,
-                                colorScheme.secondary,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.route_rounded,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Trip Splitter',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Made with ♥',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: isDark
-                                    ? AppColors.textSecondaryDark
-                                    : AppColors.textSecondaryLight,
-                              ),
-                        ),
-                      ],
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(delay: 500.ms)
-                  .scale(begin: const Offset(0.9, 0.9)),
             ],
           ),
         ),
