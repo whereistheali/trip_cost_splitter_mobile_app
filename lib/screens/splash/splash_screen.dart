@@ -88,14 +88,6 @@ class _SplashScreenState extends State<SplashScreen>
                           width: 140,
                           height: 140,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                colorScheme.primary,
-                                colorScheme.secondary,
-                              ],
-                            ),
                             borderRadius: BorderRadius.circular(40),
                             boxShadow: [
                               BoxShadow(
@@ -107,31 +99,11 @@ class _SplashScreenState extends State<SplashScreen>
                               ),
                             ],
                           ),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              const Icon(
-                                Icons.route_rounded,
-                                size: 70,
-                                color: Colors.white,
-                              ),
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.directions_car_rounded,
-                                    size: 24,
-                                    color: colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          child: const Image(
+                            image: AssetImage(
+                              'assets/images/trip_splitter_logo.png',
+                            ),
+                            fit: BoxFit.contain,
                           ),
                         ),
                       )

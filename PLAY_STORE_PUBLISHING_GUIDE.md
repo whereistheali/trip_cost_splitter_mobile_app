@@ -20,7 +20,7 @@
 - **Google Play Developer Account**: $25 one-time fee
 - **Android Studio** or **Flutter SDK** installed
 - **Java Development Kit (JDK) 17+**
-- **Keystore file** for signing your app
+- **Keystore file** for signing your app (required for release builds)
 
 ### Check Your Environment
 ```bash
@@ -31,16 +31,24 @@ flutter --version
 flutter doctor -v
 ```
 
+### Project Status
+| Item | Status |
+|------|--------|
+| Package Name | `com.tripcost.splitter` |
+| App Icon | Custom PNG in assets/images |
+| Keystore | Not created yet (see below) |
+
 ---
 
 ## App Configuration
 
-### Current Configuration (Already Done)
+### Current Configuration
 - **App Name**: Trip Cost Splitter
 - **Package Name**: `com.tripcost.splitter`
-- **Version**: 1.0.0 (versionCode: 1)
+- **Version**: 1.0.0+1 (versionCode: 1)
 - **Min SDK**: 21 (Android 5.0)
-- **Target SDK**: Latest Flutter default
+- **Target SDK**: 35
+- **Compile SDK**: 36
 
 ### To Update Version Before Publishing
 Edit `pubspec.yaml`:
@@ -48,9 +56,9 @@ Edit `pubspec.yaml`:
 version: 1.0.0+1  # Change as needed (e.g., 1.1.0+1)
 ```
 
-For each new release, increment:
-- `version`: Human readable (e.g., "1.1.0")
-- `versionCode`: Integer, must be higher than previous (e.g., 2)
+Then update `android/app/build.gradle.kts`:
+- `versionCode`: Increment by 1 (e.g., from 1 to 2)
+- `versionName`: Match pubspec version (e.g., "1.1.0")
 
 ---
 
@@ -72,28 +80,106 @@ flutter build apk --debug
 ```
 Output: `build/app/outputs/flutter-apk/app-debug.apk`
 
-### Step 4: Build Release APK (For Play Store)
+### Step 4: Create Release Keystore (Required for Release APK)
+```bash
+keytool -genkeypair -v -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -keystore trip_cost_splitter.jks -alias tripapp
+```
+
+**Important**: Save this keystore file safely! You need it for:
+- Every release update
+- Google Play App Signing (or you can let Google manage it)
+
+### Step 5: Configure Signing
+Create `android/key.properties`:
+```properties
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=tripapp
+storeFile=../trip_cost_splitter.jks
+```
+
+Update `android/app/build.gradle.kts` to use the keystore:
+```kotlin
+buildTypes {
+    release {
+        isMinifyEnabled = true
+        isShrinkResources = true
+        signingConfig = signingConfigs.create("release") {
+            storeFile = file("../trip_cost_splitter.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = "tripapp"
+            keyPassword = System.getenv("KEY_PASSWORD")
+        }
+    }
+}
+```
+
+### Step 6: Build Release APK (For Play Store)
 ```bash
 flutter build apk --release
 ```
 Output: `build/app/outputs/flutter-apk/app-release.apk`
 
-### Step 5: Create Keystore (If Not Already Created)
-If you don't have a keystore, create one:
+**Note**: For smaller APK size, you can use:
 ```bash
-keytool -genkeypair -v -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -keystore trip_cost_splitter.jks -alias tripapp
+flutter build apk --release --split-per-abi
 ```
 
-### Step 6: Configure Signing (Optional - For Enhanced Security)
-Create `android/key.properties`:
-```properties
-storePassword=your_store_password
-keyPassword=your_key_password
-keyAlias=tripapp
-storeFile=../trip_cost_splitter.jks
-```
+---
 
-Update `android/app/build.gradle.kts` to use your keystore.
+## Google Play Console Setup
+
+### Step 1: Access Google Play Console
+1. Go to [play.google.com/console](https://play.google.com/console)
+2. Sign in with your developer account
+3. Click **Create App**
+
+### Step 2: Fill Basic Info
+- **App Name**: Trip Cost Splitter
+- **Default Language**: English (en)
+- **App Type**: Android App
+- **Free or Paid**: Free (or set price)
+
+### Step 3: Store Listing Details
+
+#### App Information
+| Field | Value |
+|-------|-------|
+| Title | Trip Cost Splitter |
+| Short Description | Split trip fuel costs with friends easily |
+| Full Description | Trip Cost Splitter helps you calculate and split fuel costs for your trips. Features include route planning, vehicle presets, cost breakdown, and history tracking. Perfect for road trips with friends and family. |
+
+#### Graphic Assets (You Need to Create)
+1. **App Icon** (Required)
+   - Use your custom logo from `assets/images/trip_splitter_logo.png`
+   - Resize to: 512x512 PNG (high-res icon)
+   - Create all sizes in `android/app/src/main/res/mipmap-*/`
+
+2. **Screenshots** (Required - minimum 2)
+   - Phone screenshots: 1080x1920 or 1080x2340
+   - Take screenshots from the app:
+   ```bash
+   flutter screenshot
+   ```
+   Or use Android device's screenshot feature
+
+3. **Feature Graphic** (Required)
+   - 1024x500 PNG
+   - Showcases app features
+
+4. **Privacy Policy** (Required)
+   - Create a simple privacy policy
+   - Can be hosted on GitHub Pages, Firebase, or your website
+   - Sample privacy policy content:
+   ```
+   Privacy Policy for Trip Cost Splitter
+   
+   This app does not collect any personal information.
+   All trip data is stored locally on your device.
+   We do not share any data with third parties.
+   
+   Contact: your-email@example.com
+   ```
 
 ---
 
@@ -203,10 +289,11 @@ Update `android/app/build.gradle.kts` to use your keystore.
 
 ### Updating the App
 1. Update version in `pubspec.yaml`
-2. Build new APK: `flutter build apk --release`
-3. Upload in Play Console
-4. Create new release
-5. Roll out
+2. Update `versionCode` and `versionName` in `android/app/build.gradle.kts`
+3. Build new APK: `flutter build apk --release`
+4. Upload in Play Console
+5. Create new release
+6. Roll out
 
 ### Common Issues & Solutions
 
@@ -231,8 +318,8 @@ flutter build apk --debug
 # Build for release
 flutter build apk --release
 
-# Build with specific version
-flutter build apk --release --build-name=1.0.0 --build-number=1
+# Build with smaller size
+flutter build apk --release --split-per-abi
 
 # Clean and rebuild
 flutter clean && flutter pub get && flutter build apk --release
@@ -242,11 +329,13 @@ flutter clean && flutter pub get && flutter build apk --release
 
 ## Important Notes
 
-1. **App Signing**: Google Play can manage your signing key or you can use your own
-2. **Testing**: Test thoroughly on physical devices before publishing
-3. **Privacy Policy**: Required before publishing - add URL in Play Console
-4. **Screenshots**: Take at least 2 screenshots showing different app screens
-5. **Processing Time**: Usually takes 1-24 hours for first review, faster for updates
+1. **Keystore**: Keep it safe! Without it, you cannot update your app
+2. **App Signing**: Google Play can manage your signing key automatically (recommended for new apps)
+3. **Testing**: Test thoroughly on physical devices before publishing
+4. **Privacy Policy**: Required before publishing - add URL in Play Console
+5. **Screenshots**: Take at least 2 screenshots showing different app screens
+6. **Processing Time**: Usually takes 1-24 hours for first review, faster for updates
+7. **App Icon**: Use your custom logo from `assets/images/trip_splitter_logo.png` - generate all required sizes
 
 ---
 

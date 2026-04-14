@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
@@ -9,38 +10,122 @@ import 'screens/main_navigation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
 
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: TripCostSplitterApp(
-        initialRoute: onboardingComplete ? '/home' : '/onboarding',
-        // initialRoute: '/onboarding',
-      ),
-    ),
-  );
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  runApp(const TripCostSplitterApp());
 }
 
 class TripCostSplitterApp extends StatelessWidget {
-  final String initialRoute;
-
-  const TripCostSplitterApp({super.key, required this.initialRoute});
+  const TripCostSplitterApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = context.watch<ThemeProvider>().themeMode;
+    return ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const AppContent(),
+    );
+  }
+}
 
-    return MaterialApp(
-      title: 'Trip Splitter',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,
-      home: initialRoute == '/home'
-          ? const MainNavigation()
-          : const SplashWrapper(),
+class AppContent extends StatefulWidget {
+  const AppContent({super.key});
+
+  @override
+  State<AppContent> createState() => _AppContentState();
+}
+
+class _AppContentState extends State<AppContent> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  bool _isLoading = true;
+  bool _showOnboarding = false;
+  bool _onboardingComplete = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkOnboarding();
+  }
+
+  Future<void> _checkOnboarding() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final completed = prefs.getBool('onboarding_complete') ?? false;
+      if (mounted) {
+        setState(() {
+          _onboardingComplete = completed;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _onSplashComplete() {
+    if (mounted) {
+      setState(() {
+        _showOnboarding = true;
+      });
+    }
+  }
+
+  void _onOnboardingComplete() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarding_complete', true);
+
+    if (mounted) {
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const MainNavigation(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
+        (route) => false,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        if (_isLoading) {
+          return MaterialApp(
+            navigatorKey: _navigatorKey,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            home: const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
+          );
+        }
+
+        return MaterialApp(
+          navigatorKey: _navigatorKey,
+          title: 'Trip Cost Splitter',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: _onboardingComplete
+              ? const MainNavigation()
+              : (_showOnboarding
+                    ? OnboardingScreen(onComplete: _onOnboardingComplete)
+                    : SplashScreen(onComplete: _onSplashComplete)),
+        );
+      },
     );
   }
 }

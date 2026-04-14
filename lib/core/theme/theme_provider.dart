@@ -5,6 +5,7 @@ class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'theme_mode';
 
   ThemeMode _themeMode = ThemeMode.light;
+  bool _initialized = false;
 
   ThemeMode get themeMode => _themeMode;
 
@@ -13,21 +14,28 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   Future<void> _loadTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    final themeModeIndex = prefs.getInt(_themeKey);
-    if (themeModeIndex == null) {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final themeModeIndex = prefs.getInt(_themeKey);
+      if (themeModeIndex == null) {
+        _themeMode = ThemeMode.light;
+        await prefs.setInt(_themeKey, ThemeMode.light.index);
+      } else {
+        _themeMode = ThemeMode.values[themeModeIndex];
+      }
+    } catch (e) {
       _themeMode = ThemeMode.light;
-      await prefs.setInt(_themeKey, ThemeMode.light.index);
-    } else {
-      _themeMode = ThemeMode.values[themeModeIndex];
     }
+    _initialized = true;
     notifyListeners();
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_themeKey, mode.index);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_themeKey, mode.index);
+    } catch (_) {}
     notifyListeners();
   }
 
